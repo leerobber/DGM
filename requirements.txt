@@ -1,12 +1,13 @@
-datasets
-anthropic
-anthropic[bedrock]
-backoff
-botocore
-boto3
-openai
+# DGM — Sovereign Core edition
+# Zero cloud API dependencies. All LLM calls route to local vLLM endpoint.
 
-# SWE-Bench
+# OpenAI-compatible client (used against local vLLM/litellm endpoint)
+openai>=1.12.0
+
+# Retry with exponential back-off
+backoff
+
+# SWE-Bench evaluation
 beautifulsoup4
 chardet
 docker
@@ -17,7 +18,10 @@ python-dotenv
 rich
 unidiff
 
-# pytest
+# Dataset loading
+datasets
+
+# Testing
 pytest
 pytest-asyncio
 async_timeout
