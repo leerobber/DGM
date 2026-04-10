@@ -4,7 +4,7 @@ import json
 import os
 import docker
 
-from llm import create_client, get_response_from_llm, extract_json_between_markers
+from llm import create_client, get_response_from_llm, extract_json_between_markers, SOVEREIGN_MODEL, SOVEREIGN_API_BASE
 from prompts.self_improvement_prompt import get_diagnose_prompt_polyglot, get_diagnose_prompt_swe, get_problem_description_prompt
 from prompts.diagnose_improvement_prompt import get_diagnose_improvement_prompt
 from prompts.testrepo_prompt import get_test_description
@@ -25,7 +25,7 @@ from utils.docker_utils import (
 )
 
 dataset = None
-diagnose_model = 'o1-2024-12-17'
+diagnose_model = SOVEREIGN_MODEL
 
 def diagnose_problem(entry, commit, root_dir, out_dir, patch_files=[], max_attempts=3, polyglot=False):
     client = create_client(diagnose_model)
@@ -337,12 +337,10 @@ def self_improve(
     chat_history_file_container = "/dgm/self_evo.md"
     test_description = get_test_description(swerepo=False)
     env_vars = {
-        "ANTHROPIC_API_KEY": os.getenv('ANTHROPIC_API_KEY'),
-        "AWS_REGION": os.getenv('AWS_REGION'),
-        "AWS_REGION_NAME": os.getenv('AWS_REGION_NAME'),
-        "AWS_ACCESS_KEY_ID": os.getenv('AWS_ACCESS_KEY_ID'),
-        "AWS_SECRET_ACCESS_KEY": os.getenv('AWS_SECRET_ACCESS_KEY'),
-        "OPENAI_API_KEY": os.getenv('OPENAI_API_KEY'),
+        # Sovereign Core: point containers at the local vLLM endpoint
+        "SOVEREIGN_API_BASE": os.getenv('SOVEREIGN_API_BASE', SOVEREIGN_API_BASE),
+        "SOVEREIGN_MODEL": os.getenv('SOVEREIGN_MODEL', SOVEREIGN_MODEL),
+        "SOVEREIGN_API_KEY": os.getenv('SOVEREIGN_API_KEY', 'sovereign'),
     }
     cmd = [
         "timeout", "1800",  # 30min timeout
