@@ -1,103 +1,141 @@
-<h1 align="center">
-    Darwin Gödel Machine:<br/>Open-Ended Evolution of Self-Improving Agents
-</h1>
+# Darwin Gödel Machine (DGM) — Sovereign Core Edition
 
-<p align="center">
-  <a href="https://github.com/jennyzzt/dgm/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge"></a>
-  <a href="https://arxiv.org/abs/2505.22954"><img src="https://img.shields.io/badge/arXiv-2505.22954-b31b1b.svg?logo=arxiv&style=for-the-badge"></a>
-  <a href="https://sakana.ai/dgm/"><img src="https://img.shields.io/badge/-Blog-%238D6748?style=for-the-badge&logo=Website&logoColor=white"></a>
-  <a href="https://x.com/SakanaAILabs/status/1928272612431646943"><img src="https://img.shields.io/badge/twitter-%230077B5.svg?&style=for-the-badge&logo=twitter&logoColor=white&color=00acee"></a>
-  <a href="https://drive.google.com/drive/folders/1Kcu9TbIa9Z50pJ7S6hH9omzzD1pxIYZC?usp=sharing"><img src="https://img.shields.io/badge/Experiment%20Logs-4285F4?style=for-the-badge&logo=googledrive&logoColor=white"></a>
-</p>
+> Open-ended self-improvement of coding agents via evolutionary search.
+> Now running entirely on local GPU hardware through the Sovereign Core gateway.
 
+---
 
-Repository for **Darwin Gödel Machine (DGM)**, a novel self-improving system that iteratively modifies its own code (thereby also improving its ability to modify its own codebase) and empirically validates each change using coding benchmarks.
+## What This Is
 
-<p align="center">
-  <img src="./misc/overview.gif" width="100%" height="auto" />
-</p>
-<!-- <p align="center">
-<img src="./misc/conceptual.svg"/></a><br>
-</p> -->
+The Darwin Gödel Machine is a system that:
+1. Takes a **coding agent** as the base unit
+2. Uses that agent to **improve itself** (generate diffs to its own code)
+3. Evaluates the improved agent against SWE-bench coding tasks
+4. If it scores better → adds it to an **archive** (stepping stones, not just the best)
+5. Future generations bootstrap from the archive — not just the current best
 
+This is open-ended evolution. The archive grows. The system gets smarter.
 
-## Setup
-```bash
-# API keys, add to ~/.bashrc
-export OPENAI_API_KEY='...'
-export ANTHROPIC_API_KEY='...'
+---
+
+## Sovereign Core Integration
+
+DGM now routes all inference through your local GPU cluster instead of Anthropic/OpenAI.
+
+```
+coding_agent.py  →  llm_withtools_sovereign.py  →  /v1/chat/completions
+                                                      │
+                                              Sovereign Core Gateway :8000
+                                                      │
+                                    ┌─────────────────┼─────────────────┐
+                                    │                 │                 │
+                               RTX 5050         Radeon 780M         Ryzen 7
+                            Qwen2.5:14b      DeepSeek-Coder:6.7b   Mistral:7B
+                            (proposer)         (verifier)           (fallback)
 ```
 
-```bash
-# Verify that Docker is properly configured in your environment.
-docker run hello-world
- 
-# If a permission error occurs, add the user to the Docker group
-sudo usermod -aG docker $USER
-newgrp docker
-```
+---
 
-```bash
-# Install dependencies
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Optional: for running analysis
-sudo apt-get install graphviz graphviz-dev
-pip install -r requirements_dev.txt
-```
+## Quick Start
 
 ```bash
-# Clone SWE-bench
-cd swe_bench
-git clone https://github.com/princeton-nlp/SWE-bench.git
-cd SWE-bench
-git checkout dc4c087c2b9e4cefebf2e3d201d27e36
-pip install -e .
-cd ../../
+# Clone
+git clone https://github.com/leerobber/DGM
+cd DGM
 
-# Prepare Polyglot
-# Make sure git is properly configured in your environment with username and email
-python -m polyglot.prepare_polyglot_dataset
+# Configure
+cp .env.example .env
+# Set SOVEREIGN_GATEWAY_URL to your TatorTot IP
+
+# Verify gateway connection
+curl http://localhost:8000/health
+
+# Run DGM (self-improvement loop)
+python DGM_outer.py \
+  --output_dir ./output \
+  --selfimprove_size 4 \
+  --n_generations 10
+
+# Or with Sovereign-aware agent
+USE_SOVEREIGN=1 python DGM_outer.py --output_dir ./output
 ```
 
-## Running the DGM
+---
+
+## Architecture
+
+### DGM_outer.py — Evolution Loop
+```
+Initialize archive = ['initial']
+For each generation:
+  Choose parent candidates from archive (by score + diversity)
+  Spawn N self-improvement workers (ThreadPoolExecutor)
+    Each worker: coding_agent.py mutates the agent code
+                 Run SWE-bench evaluation
+                 If score > threshold → add to archive
+  Update DGM metadata (dgm_metadata.jsonl)
+```
+
+### coding_agent.py — The Self-Improving Agent
+```
+Given: a repo with a bug (SWE-bench instance)
+1. Read issue description
+2. Explore the codebase
+3. Generate a patch via LLM (now → Sovereign Core)
+4. Apply patch
+5. Run tests
+6. Evaluate score
+```
+
+### llm_withtools_sovereign.py — The LLM Bridge
+```
+Priority chain:
+  1. Sovereign Core gateway /v1/chat/completions
+  2. Direct Ollama (if gateway down)
+  3. Original llm_withtools (cloud fallback, if Ollama down)
+```
+
+---
+
+## Integration with KAIROS
+
+DGM-generated improvements can feed into the KAIROS SAGE loop:
+
 ```bash
-python DGM_outer.py
+# Run DGM, then push best agent to KAIROS
+python scripts/dgm_to_kairos.py \
+  --dgm_output ./output \
+  --gateway http://localhost:8000
 ```
-By default, outputs will be saved in the `output_dgm/` directory.
 
-## File Structure
-- `analysis/` scripts used for plotting and analysis
-- `initial/` SWE-bench logs and performance of the initial agent
-- `initial_polyglot/` Polyglot logs and performance of the initial agent
-- `swe_bench/` code needed for SWE-bench evaluation
-- `polyglot/` code needed for Polyglot evaluation
-- `prompts/` prompts used for foundation models
-- `tests/` tests for the DGM system
-- `tools/` tools available to the foundation models
-- `coding_agent.py` main implementation of the initial coding agent
-- `DGM_outer.py` entry point for running the DGM algorithm
+The KAIROS archive then evolves the agent using the 4-agent SAGE loop,
+combining DGM's evolutionary search with SAGE's adversarial refinement.
 
-## Logs from Experiments
-This [google drive folder](https://drive.google.com/drive/folders/1Kcu9TbIa9Z50pJ7S6hH9omzzD1pxIYZC?usp=sharing) contains all the foundation model output logs from the experiments shown in the paper.
+---
 
-## Safety Consideration
-> [!WARNING]  
-> This repository involves executing untrusted, model-generated code. We strongly advise users to be aware of the associated safety risks. While it is highly unlikely that such code will perform overtly malicious actions under our current settings and with the models we use, it may still behave destructively due to limitations in model capability or alignment. By using this repository, you acknowledge and accept these risks.
+## Performance Notes
 
-## Acknowledgement
+- **RTX 5050 (8GB VRAM)**: Handles Qwen2.5:14B comfortably. For 32B you'll need 4-bit quant.
+- **Radeon 780M (4GB VRAM)**: Runs DeepSeek-Coder:6.7B for code verification steps.
+- **Ryzen 7**: CPU fallback for Mistral:7B / smaller models.
+- **Gateway routing**: Automatically selects best available backend per request.
 
-The evaluation framework implementations are based on the [SWE-bench](https://github.com/swe-bench/SWE-bench) and [polyglot-benchmark](https://github.com/Aider-AI/polyglot-benchmark) repositories.
+---
 
-## Citing
-If you find this project useful, please consider citing:
-```bibtex
-@article{zhang2025darwin,
-  title={Darwin Godel Machine: Open-Ended Evolution of Self-Improving Agents},
-  author={Zhang, Jenny and Hu, Shengran and Lu, Cong and Lange, Robert and Clune, Jeff},
-  journal={arXiv preprint arXiv:2505.22954},
-  year={2025}
-}
-```
+## Files
+
+| File | Purpose |
+|------|---------|
+| `DGM_outer.py` | Main evolution loop |
+| `coding_agent.py` | Single-language coding agent |
+| `coding_agent_polyglot.py` | Multi-language coding agent |
+| `llm_withtools_sovereign.py` | ← **Sovereign Core LLM adapter** |
+| `self_improve_step.py` | One self-improvement step |
+| `analysis/` | Visualization scripts |
+| `initial/` | Baseline agent (SWE-bench initial run) |
+
+---
+
+## License
+
+MIT (following Meta's original DGM license)
