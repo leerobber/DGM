@@ -1,141 +1,148 @@
-# Darwin Gödel Machine (DGM) — Sovereign Core Edition
+# DGM — Darwin Gödel Machine
 
-> Open-ended self-improvement of coding agents via evolutionary search.
-> Now running entirely on local GPU hardware through the Sovereign Core gateway.
+> *An AI agent that improves its own source code. Generation by generation. No ceiling.*
+
+[![Python](https://img.shields.io/badge/Python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Sovereign Core](https://img.shields.io/badge/Sovereign_Core-connected-00ff88?style=flat-square)](https://github.com/leerobber/sovereign-core)
+[![Architecture](https://img.shields.io/badge/Architecture-Gödel_Machine-7c3aed?style=flat-square)](https://github.com/leerobber/DGM)
 
 ---
 
 ## What This Is
 
-The Darwin Gödel Machine is a system that:
-1. Takes a **coding agent** as the base unit
-2. Uses that agent to **improve itself** (generate diffs to its own code)
-3. Evaluates the improved agent against SWE-bench coding tasks
-4. If it scores better → adds it to an **archive** (stepping stones, not just the best)
-5. Future generations bootstrap from the archive — not just the current best
+DGM is an implementation of the **Darwin Gödel Machine** — a self-improving AI agent that modifies its own code to solve progressively harder problems.
 
-This is open-ended evolution. The archive grows. The system gets smarter.
+Named after two ideas that changed how we think about intelligence:
+
+- **Darwin** — keep good solutions, build on them, improve generation by generation. Don't just keep the best — keep every good-enough stepping stone, because the path to breakthrough often goes through mediocre.
+- **Gödel** — any system powerful enough to do mathematics can also reason about itself. If you can reason about yourself, you can rewrite yourself to be better.
+
+Put those together: an agent that reads its own code, understands what it's doing, proposes improvements, tests them empirically, and keeps the ones that work.
+
+---
+
+## How It Works
+
+```
+┌────────────────────────────────────────────────────────┐
+│                    DGM LOOP                            │
+│                                                        │
+│  1. Take a problem from the benchmark                  │
+│  2. Generate a solution in code                        │
+│  3. Run the solution — measure the score               │
+│  4. If score > current best → new stepping stone       │
+│  5. Propose modifications to the solution code         │
+│  6. Test modifications empirically                     │
+│  7. Keep improvements, discard regressions             │
+│  8. Repeat from the new stepping stone                 │
+│                                                        │
+│  Result: each generation starts ahead of the last     │
+└────────────────────────────────────────────────────────┘
+```
+
+**The key insight:** Don't just keep the single best solution. Keep every good-enough stepping stone. Sometimes the path to a breakthrough goes through something mediocre. Discard the mediocre and you discard the bridge.
+
+---
+
+## The Stepping Stones Archive
+
+Every solution that beats the previous best gets archived — not replaced. The archive grows. Each new run can start from *any* stepping stone, not just the most recent one.
+
+This creates **diversity of evolutionary paths** — which is what prevents getting trapped in local optima.
+
+```
+Generation 1: Score 0.45 ──► archived
+Generation 2: Score 0.52 ──► archived  
+Generation 3: Score 0.61 ──► archived
+Generation 4: Score 0.58 ──► below threshold, discarded
+Generation 5: Score 0.74 ──► archived ← branches from Gen 3, not Gen 4
+Generation 6: Score 0.89 ──► Elite status
+```
 
 ---
 
 ## Sovereign Core Integration
 
-DGM now routes all inference through your local GPU cluster instead of Anthropic/OpenAI.
+DGM uses the **Sovereign Core gateway** for all LLM inference — no cloud API required.
 
+```python
+# .env
+SOVEREIGN_GATEWAY_URL=http://localhost:8000
+
+# Inference routes through:
+# RTX 5050 (Qwen2.5)    → primary
+# Radeon 780M           → fallback
+# Ryzen CPU             → last resort
 ```
-coding_agent.py  →  llm_withtools_sovereign.py  →  /v1/chat/completions
-                                                      │
-                                              Sovereign Core Gateway :8000
-                                                      │
-                                    ┌─────────────────┼─────────────────┐
-                                    │                 │                 │
-                               RTX 5050         Radeon 780M         Ryzen 7
-                            Qwen2.5:14b      DeepSeek-Coder:6.7b   Mistral:7B
-                            (proposer)         (verifier)           (fallback)
-```
+
+All reasoning, code generation, and self-modification happens on local hardware.
 
 ---
 
-## Quick Start
+## Quickstart
 
 ```bash
-# Clone
 git clone https://github.com/leerobber/DGM
 cd DGM
+pip install -r requirements.txt
 
-# Configure
+# Configure sovereign gateway
 cp .env.example .env
-# Set SOVEREIGN_GATEWAY_URL to your TatorTot IP
+# Set SOVEREIGN_GATEWAY_URL=http://localhost:8000
 
-# Verify gateway connection
-curl http://localhost:8000/health
-
-# Run DGM (self-improvement loop)
-python DGM_outer.py \
-  --output_dir ./output \
-  --selfimprove_size 4 \
-  --n_generations 10
-
-# Or with Sovereign-aware agent
-USE_SOVEREIGN=1 python DGM_outer.py --output_dir ./output
+# Run the evolution loop
+python main.py
 ```
 
 ---
 
 ## Architecture
 
-### DGM_outer.py — Evolution Loop
 ```
-Initialize archive = ['initial']
-For each generation:
-  Choose parent candidates from archive (by score + diversity)
-  Spawn N self-improvement workers (ThreadPoolExecutor)
-    Each worker: coding_agent.py mutates the agent code
-                 Run SWE-bench evaluation
-                 If score > threshold → add to archive
-  Update DGM metadata (dgm_metadata.jsonl)
-```
-
-### coding_agent.py — The Self-Improving Agent
-```
-Given: a repo with a bug (SWE-bench instance)
-1. Read issue description
-2. Explore the codebase
-3. Generate a patch via LLM (now → Sovereign Core)
-4. Apply patch
-5. Run tests
-6. Evaluate score
-```
-
-### llm_withtools_sovereign.py — The LLM Bridge
-```
-Priority chain:
-  1. Sovereign Core gateway /v1/chat/completions
-  2. Direct Ollama (if gateway down)
-  3. Original llm_withtools (cloud fallback, if Ollama down)
+dgm/
+├── main.py                  # Entry point — runs the evolution loop
+├── agent/
+│   ├── dgm_agent.py         # Core agent — proposes and applies modifications
+│   └── llm_withtools_sovereign.py  # Sovereign Core LLM adapter
+├── evaluation/
+│   └── evaluator.py         # Scores solutions empirically
+├── archive/
+│   └── stepping_stones.py   # Manages the stepping stone archive
+└── benchmarks/
+    └── tasks/               # Problem sets for the agent to solve
 ```
 
 ---
 
-## Integration with KAIROS
+## Philosophy
 
-DGM-generated improvements can feed into the KAIROS SAGE loop:
+The difference between a system that improves and a system that just runs is the feedback loop.
 
-```bash
-# Run DGM, then push best agent to KAIROS
-python scripts/dgm_to_kairos.py \
-  --dgm_output ./output \
-  --gateway http://localhost:8000
-```
+DGM closes the loop: the agent produces code, the code gets scored, the score determines what survives, what survives becomes the foundation for the next attempt.
 
-The KAIROS archive then evolves the agent using the 4-agent SAGE loop,
-combining DGM's evolutionary search with SAGE's adversarial refinement.
+No human in the loop. No manual intervention. Just selection pressure — the computational equivalent of evolution.
+
+> *"I'm not trying to build the smartest system today. I'm building the one that gets smarter fastest over time."*
 
 ---
 
-## Performance Notes
+## Part of the Sovereign Stack
 
-- **RTX 5050 (8GB VRAM)**: Handles Qwen2.5:14B comfortably. For 32B you'll need 4-bit quant.
-- **Radeon 780M (4GB VRAM)**: Runs DeepSeek-Coder:6.7B for code verification steps.
-- **Ryzen 7**: CPU fallback for Mistral:7B / smaller models.
-- **Gateway routing**: Automatically selects best available backend per request.
+DGM is one node in a larger system:
 
----
-
-## Files
-
-| File | Purpose |
-|------|---------|
-| `DGM_outer.py` | Main evolution loop |
-| `coding_agent.py` | Single-language coding agent |
-| `coding_agent_polyglot.py` | Multi-language coding agent |
-| `llm_withtools_sovereign.py` | ← **Sovereign Core LLM adapter** |
-| `self_improve_step.py` | One self-improvement step |
-| `analysis/` | Visualization scripts |
-| `initial/` | Baseline agent (SWE-bench initial run) |
+| Repo | Role |
+|------|------|
+| [sovereign-core](https://github.com/leerobber/sovereign-core) | Gateway + KAIROS engine |
+| **DGM** | Self-improving coding agent — stepping stones feed KAIROS |
+| [HyperAgents](https://github.com/leerobber/HyperAgents) | Self-referential swarm agents |
+| [Honcho](https://github.com/leerobber/Honcho) | Mission control dashboard |
+| [contentai-pro](https://github.com/leerobber/contentai-pro) | Multi-agent content engine |
 
 ---
 
-## License
+## Built By
 
-MIT (following Meta's original DGM license)
+**Terry Lee** — Douglasville, GA  
+Self-taught systems architect. No team. No institution. Just architecture.
+
+*Self-taught. Self-funded. Self-improving — just like the systems I build.*
