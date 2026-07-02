@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["graph_bfs", "graph_dfs", "graph_topo", "graph_shortest"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
