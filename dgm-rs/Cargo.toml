@@ -1,0 +1,16 @@
+[package]
+name = "dgm-rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "dgm_rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1

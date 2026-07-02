@@ -1,0 +1,15 @@
+/tmp/DGM/dgm-rs/target/debug/deps/target_lexicon-58eda1376e58b43a.d: /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/lib.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/data_model.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/host.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/parse_error.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/targets.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/triple.rs /tmp/DGM/dgm-rs/target/debug/build/target-lexicon-63f1659e0d81c90a/out/host.rs
+
+/tmp/DGM/dgm-rs/target/debug/deps/libtarget_lexicon-58eda1376e58b43a.rlib: /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/lib.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/data_model.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/host.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/parse_error.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/targets.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/triple.rs /tmp/DGM/dgm-rs/target/debug/build/target-lexicon-63f1659e0d81c90a/out/host.rs
+
+/tmp/DGM/dgm-rs/target/debug/deps/libtarget_lexicon-58eda1376e58b43a.rmeta: /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/lib.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/data_model.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/host.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/parse_error.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/targets.rs /home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/triple.rs /tmp/DGM/dgm-rs/target/debug/build/target-lexicon-63f1659e0d81c90a/out/host.rs
+
+/home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/lib.rs:
+/home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/data_model.rs:
+/home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/host.rs:
+/home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/parse_error.rs:
+/home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/targets.rs:
+/home/leer4/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.12.16/src/triple.rs:
+/tmp/DGM/dgm-rs/target/debug/build/target-lexicon-63f1659e0d81c90a/out/host.rs:
+
+# env-dep:OUT_DIR=/tmp/DGM/dgm-rs/target/debug/build/target-lexicon-63f1659e0d81c90a/out
